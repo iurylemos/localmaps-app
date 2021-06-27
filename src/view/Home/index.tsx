@@ -10,6 +10,7 @@ import {
   Image,
 } from "react-native";
 import MapView, { Marker } from "react-native-maps";
+import { categories } from "../../utils/categories";
 
 const ScreenHome: React.FC = () => {
   return (
@@ -23,18 +24,19 @@ const ScreenHome: React.FC = () => {
       <MapView style={styles.map}>
         <Marker coordinate={{ latitude: 0, longitude: 0 }} />
       </MapView>
-      <View>
+      <View style={styles.categoryContainer}>
         <FlatList
-          data={[]}
+          data={categories}
           horizontal
+          ItemSeparatorComponent={() => <View style={{ width: 10 }} />}
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{
             alignItems: "center",
           }}
           renderItem={({ item }) => (
-            <TouchableOpacity key={item.key}>
-              <Image />
-              <Text>{item.label}</Text>
+            <TouchableOpacity key={item.key} style={styles.categoryItem}>
+              <Image style={styles.categoryImage} source={item.image} />
+              <Text style={styles.categoryText}>{item.label}</Text>
             </TouchableOpacity>
           )}
         />
@@ -64,6 +66,25 @@ const styles = StyleSheet.create({
   },
   map: {
     flex: 1,
+  },
+  categoryContainer: {
+    padding: 10,
+  },
+  categoryItem: {
+    height: 110,
+    backgroundColor: "#f0f0f5",
+    width: 100,
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 10,
+  },
+  categoryImage: {
+    width: 50,
+    height: 50,
+  },
+  categoryText: {
+    textAlign: "center",
+    color: "#6c6c80",
   },
 });
 
