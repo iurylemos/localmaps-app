@@ -1,4 +1,7 @@
+import { useNavigation } from "@react-navigation/native";
 import React from "react";
+import { useEffect } from "react";
+import { useState } from "react";
 import {
   Text,
   View,
@@ -8,11 +11,40 @@ import {
   FlatList,
   TouchableOpacity,
   Image,
+  ActivityIndicator,
 } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import { categories } from "../../utils/categories";
 
+export interface IMarker {
+  category: string;
+  contact: string;
+  description: string;
+  id: string;
+  latitude: number;
+  longitude: number;
+  name: string;
+}
+
 const ScreenHome: React.FC = () => {
+  const [markers, setMarkers] = useState<IMarker[]>([]);
+  const [filter, setFilter] = useState<string>("");
+  const navigation = useNavigation();
+
+  const filteredMarker = markers.filter((i) => i.category === filter);
+
+  useEffect(() => {
+    fetch("http://192.168.0.8:3000/store").then(async (request) => {
+      const data = await request.json();
+
+      setMarkers(data);
+    });
+  }, []);
+
+  if (!markers || !markers.length) {
+    return <ActivityIndicator />;
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.headerContainer}>
@@ -21,8 +53,24 @@ const ScreenHome: React.FC = () => {
           Encontre no mapa um ponto de comércio local
         </Text>
       </View>
-      <MapView style={styles.map}>
-        <Marker coordinate={{ latitude: 0, longitude: 0 }} />
+      <MapView
+        style={styles.map}
+        initialRegion={{
+          latitude: -3.7322379471547955,
+          longitude: -38.530270101427455,
+          latitudeDelta: 0.0922,
+          longitudeDelta: 0.0421,
+        }}
+      >
+        {(filter ? filteredMarker : markers).map((item: IMarker) => (
+          <Marker
+            key={Math.random() + item.id}
+            coordinate={{ latitude: item.latitude, longitude: item.longitude }}
+            onPress={() => {
+              navigation.navigate("Detail", item);
+            }}
+          />
+        ))}
       </MapView>
       <View style={styles.categoryContainer}>
         <FlatList
@@ -34,7 +82,16 @@ const ScreenHome: React.FC = () => {
             alignItems: "center",
           }}
           renderItem={({ item }) => (
-            <TouchableOpacity key={item.key} style={styles.categoryItem}>
+            <TouchableOpacity
+              key={item.key}
+              style={[
+                styles.categoryItem,
+                filter === item.key ? styles.selectedCategory : null,
+              ]}
+              onPress={() => {
+                setFilter(filter === item.key ? "" : item.key);
+              }}
+            >
               <Image style={styles.categoryImage} source={item.image} />
               <Text style={styles.categoryText}>{item.label}</Text>
             </TouchableOpacity>
@@ -85,6 +142,11 @@ const styles = StyleSheet.create({
   categoryText: {
     textAlign: "center",
     color: "#6c6c80",
+  },
+  selectedCategory: {
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#322153",
   },
 });
 
