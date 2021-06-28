@@ -1,12 +1,90 @@
+import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import React from "react";
-import { Text, View } from "react-native";
+import { useState } from "react";
+import { useEffect } from "react";
+import { Text, View, StyleSheet } from "react-native";
+import { IMarker } from "../Home";
+
+type DetailRoute = RouteProp<{ detail: IMarker }, "detail">;
+
+type Address = {
+  address: {
+    city: string;
+    country: string;
+    municipality: string;
+    postcode: string;
+    road: string;
+    state: string;
+    suburb: string;
+  };
+  display_name: string;
+};
 
 const ScreenDetail: React.FC = () => {
+  const [address, setAddress] = useState<Address>();
+  const { params } = useRoute<DetailRoute>();
+  const navigation = useNavigation();
+
+  useEffect(() => {
+    fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${params.latitude}&lon=${params.longitude}&format=json`
+    ).then(async (request) => {
+      const data = await request.json();
+      setAddress(data);
+      navigation.setOptions({
+        title: params.name,
+      });
+    });
+  }, []);
+
   return (
-    <View>
-      <Text>Page Detail</Text>
+    <View style={styles.container}>
+      <Text style={styles.title}>{params.name}</Text>
+      <Text style={styles.subTitle}>{params.description}</Text>
+
+      <Text style={styles.section}>Endereço</Text>
+      <Text style={styles.text}>{address?.display_name}</Text>
+      <Text style={styles.section}>Rua</Text>
+      <Text style={styles.text}>{address?.address.road}</Text>
+      <Text style={styles.section}>Cidade</Text>
+      <Text style={styles.text}>{address?.address.city}</Text>
+      <Text style={styles.section}>Cep</Text>
+      <Text style={styles.text}>{address?.address.postcode}</Text>
+      <Text style={styles.section}>Estado</Text>
+      <Text style={styles.text}>{address?.address.state}</Text>
+
+      <Text style={styles.section}>Contato</Text>
+      <Text style={styles.text}>{params.contact}</Text>
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#F0F0F5",
+    padding: 20,
+  },
+  title: {
+    color: "#322153",
+    fontSize: 28,
+    fontWeight: "bold",
+  },
+  subTitle: {
+    color: "#6C6C80",
+    fontSize: 18,
+    fontWeight: "400",
+  },
+  section: {
+    color: "#322153",
+    fontSize: 16,
+    fontWeight: "bold",
+    paddingTop: 20,
+  },
+  text: {
+    color: "#6C6C80",
+    fontSize: 16,
+  },
+});
 
 export default ScreenDetail;
